@@ -129,7 +129,7 @@ We want to obtain the same result with significantly lower computational costs.
 To achieve this, we plan to:
 
 - Determine the required polynomial degree without constructing the full system in advance.
-- Avoid n times matrices when they are unnecessary.
+- Avoid n * n times matrices when they are unnecessary.
 - Reduce time and space complexity.
 - Improve numerical stability.
 - Mathematically prove the correctness of the new algorithm.
@@ -160,7 +160,3 @@ We plan to evaluate:
 
 Experimental education project.
 The implementation is not production-ready.
-
-## Learning Log
-
-[What I Learned](docs/learning.md)
