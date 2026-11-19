@@ -160,3 +160,7 @@ We plan to evaluate:
 
 Experimental education project.
 The implementation is not production-ready.
+
+## Learning Log
+
+[What I Learned](docs/learning.md)
