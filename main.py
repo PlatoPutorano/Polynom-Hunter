@@ -1,78 +1,59 @@
 import csv
+import numpy as np
 
-def to_rref(matrix: list[list[float]]) -> list[list]:
-    M = [[float(num) for num in row] for row in matrix]
-
-    rows = len(M)
-    cols = len(M[0])
-    lead = 0
-
-    for r in range(rows):
-        if lead >= cols:
-            break
-
-        i = r
-        while abs(M[i][lead]) < 1e-10:
-            i += 1
-            if i == rows:
-                i = r
-                lead += 1
-                if lead == cols:
-                    return M
-
-        M[i], M[r] = M[r], M[i]
-
-        pivot = M[r][lead]
-        M[r] = [m / pivot for m in M[r]]
-
-        for i in range(rows):
-            if i != r:
-                factor = M[i][lead]
-                M[i] = [M[i][j] - factor * M[r][j] for j in range(cols)]
-
-        lead += 1
-
-    for r in range(rows):
-        for c in range(cols):
-            if abs(M[r][c]) <1e-10:
-                M[r][c] = 0.0
-
-    return M
 
 def read_csv(path: str) -> tuple[list[float], list[float]]:
     x = []
     y = []
 
-    with open(path, 'r', newline="", encoding='utf-8') as file:
+    with open(path, 'r', newline='', encoding='utf-8') as file:
         reader = csv.DictReader(file)
-
         for row in reader:
             x.append(float(row['x']))
             y.append(float(row['y']))
+
     return x, y
 
-x, y = read_csv('data.csv')
 
-n = len(x)
+def find_coefficients(x: np.ndarray, y: np.ndarray) -> np.ndarray:
 
-A = []
+    n = len(x)
 
-for row in range(0, n):
-    A.append([])
-    for deg in range(0, n):
-        A[row].append(x[row] ** deg)
+    E = np.eye(n)
+    for i in range(1, n):
+        E[i, :] -= E[0, :]
 
-matrix = A
+    for m in range(n):
+        if m > 0:
+            v = x ** m
+            w = E @ v
 
-for i in range(0, n):
-    matrix[i].append(y[i])
+            pivot_row = None
+            for i in range(m, n):
+                if w[i] != 0:
+                    pivot_row = i
+                    break
+            if pivot_row is None:
+                raise ArithmeticError('No nonzero pivot found; check numerical stability')
 
-result = to_rref(matrix)
+            if pivot_row != m:
+                w[m], w[pivot_row] = w[pivot_row], w[m]
+                E[[m, pivot_row], :] = E[[pivot_row, m], :]
 
-a = []
+            E[m, :] /= w[m]
+            for i in range(n):
+                if i != m:
+                    E[i, :] -= E[m, :] * w[i]
 
-for i in range(0, n):
-    for j in range(n, n + 1):
-        a.append(result[i][j])
-a.reverse()
-print(a)
+        b = E @ y
+        if np.allclose(b[m + 1:], 0, atol=1e-10, rtol=0):
+            return b[:m + 1][::-1]
+
+    raise ArithmeticError('No polynomial found; check numerical stability')
+
+
+if __name__ == '__main__':
+    x_values, y_values = read_csv('data.csv')
+    x = np.array(x_values)
+    y = np.array(y_values)
+    print(find_coefficients(x, y))
